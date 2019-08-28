@@ -1,0 +1,193 @@
+= blkmenu(1)
+Giacomo Comitti
+v0.1, 27.08.2019
+:doctype: manpage
+:manmanual: BLKMENU
+:mansource: BLKMENU
+
+== Name
+
+blkmenu - tiny curses wrapper around lsblk and udisksctl.
+
+== Synopsis
+
+*blkmenu* [OPTIONS]
+
+== Options
+
+*-h, --help*::
+	Print help information.
+
+*-V, --version*::
+	Print version information.
+
+*--border*::
+	Show menu border.
+
+*--no-border*::
+	Don’t show menu border. This is the default behavior.
+
+*--title* _TITLE_::
+	Set menu title. Shown only when the border is enabled.
+	Default value: " blkmenu "
+
+*--no-title*::
+	Don’t show menu title. Same as *--title* "".
+
+*--columns* _COLUMNS_::
+	Show only the given device properties. See `lsblk --help` for a list of all available properties. + 
+	Default value: "name,&gt;size,type,fstype,partlabel,label,rm,ro,mountpoint"
+
+*--header*::
+	Show column headers. Enabled by default.
+
+*--no-header*::
+	Hide column headers.
+
+*--flat*::
+	Don't show hierarchy relationships between devices.
+
+*--tree* [_COLUMN_NAME_]::
+	The column displayed as hierarchy tree. Defaults to the first column.
+
+*--stretch*::
+	Stretch columns to fill the whole window. This is the default behavior.
+
+*--no-stretch*::
+	Don’t stretch columns to fill the whole window. Columns will be separated by the separator set with the *--sep* option.
+
+*--sep* _SEPARATOR_::
+	String used to separate columns when *--no-stretch* is given. + 
+	Default value: " "
+
+*--open* _CMD_::
+	Command used to open a device mountpoint. Append '&' to open the command in background. + 
+	Default value: the value of `$SHELL` or "/bin/sh", in this order
+
+*--mount-opts* _OPTS_::
+	Default mount options. + 
+	Default value: "nosuid,noexec,noatime"
+
+*--vifm* [_SERVER_NAME_]::
+	Vifm server name. Bypass the *--open* option and open the device mountpoint directly in the vifm instance named _SERVER_NAME_. + 
+	Default value: "vifm"
+
+*-f* _EXPR_ [_EXPR_ ...]::
+	Exclude devices that match any of the given expression rules. + 
+	See the <<_filter_expressions,FILTER EXPRESSIONS>> section.
+
+*-p* _EXPR_ [_EXPR_ ...]::
+	Exclude devices and all their descendants that match any of the given expression rules. + 
+	See the <<_filter_expressions,FILTER EXPRESSIONS>> section.
+
+*-a* _KEY:ACTION_ [_KEY:ACTION_ ...]::
+	Bindings as _key:action_ pairs. Arrow keys can be mapped by using the special strings "KEY_UP", "KEY_DOWN", "KEY_LEFT" and "KEY_RIGHT". + 
+	See the <<_available_actions,AVAILABLE ACTIONS>> section.
+
+*-A* _KEY:ACTION_ [_KEY:ACTION_ ...]::
+	Bindings as _key:action_ pairs. Same as *-a* but clears other bindings that map to the same action. Arrow keys can be mapped by using the special strings "KEY_UP", "KEY_DOWN", "KEY_LEFT" and "KEY_RIGHT". + 
+	See the <<_available_actions,AVAILABLE ACTIONS>> section.
+
+== Available Actions
+
+*quit* Exit the program.
+
+*movedown* Move down a line.
+
+*moveup* Move up a line.
+
+*mount* Mount the selected device.
+
+*unmount* Unmount the selected device.
+
+*lock* Lock selected device.
+
+*unlock* Unlock selected device.
+
+*eject* Eject selected device.
+
+*open* Open the selected device mountpoint with the given *--open* command.
+
+*info* Display all device properties.
+
+*refresh* Refresh the device tree.
+
+*toggle_filter* Toggle active filters (set with *-f* or *-p*).
+
+*help* Display help screen.
+
+== Default Bindings
+
+*q* quit
+
+*j or KEY_DOWN* movedown
+
+*k or KEY_UP* moveup
+
+*m* mount
+
+*u* unmount
+
+*l* lock
+
+*L* unlock
+
+*e* eject
+
+*o* open
+
+*i* info
+
+*r* refresh
+
+*a* toggle_filter
+
+*?* help
+
+== Filter Expressions
+
+Filters are expected to be python conditional expressions. To refer to
+device properties you can use the same identifiers you would use for the
+*--columns* option. For a list of all available identifiers see 'lsblk
+--help'. The 'match' and 'search' functions of the _re_ python module are
+also available.
+
+=== Example expressions:
+
+*"not mountpoint"*
+	Display only mounted devices.
+
+*"'sda' in path"*
+	Display only devices whose path doesn’t contain the string 'sda'.
+
+*"name == 'sda'"*
+	Hide devices whose name is ’sda’.
+
+*"name.startswith('sda')"*
+	Hide devices whose name starts with 'sda'.
+
+== Resources
+
+*Project site:* https://github.com/gcmt/blkmenu
+
+== License
+
+Copyright (C) 2019 {author}. +
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

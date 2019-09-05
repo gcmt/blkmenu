@@ -14,7 +14,7 @@ Arch users can simply run the following command from the project directory
 makepkg -si
 ```
 
-Anyone else can install the progam wih `pip`
+Anyone else can install the program with `pip`
 
 ```
 pip install --user blkmenu

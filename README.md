@@ -3,7 +3,7 @@ blkmenu
 
 Tiny curses wrapper around _lsblk_ and _udisksctl_.
 
-[Screenshot](_assets/screenshot.png)
+![Screenshot](_assets/screenshot.png "Screenshot")
 
 Installation
 ------------

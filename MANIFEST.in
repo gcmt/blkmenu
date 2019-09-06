@@ -1,0 +1,5 @@
+include _assets/*
+include README.md
+include LICENSE.txt
+include blkmenu.adoc
+include blkmenu.1

@@ -465,10 +465,11 @@ class Menu:
         self.message = ""
         self.refresh = False
 
-    def do(self, action):
-        """Perform the given action.
+    def do(self, device, action):
+        """Performs an action on the given device.
 
         Args:
+            device (Device): The target device.
             action (str): The action to perform.
 
         Raises:
@@ -478,11 +479,6 @@ class Menu:
         Returns:
             Whether or not the action was performed successfully.
         """
-
-        try:
-            device = self.device_list[self.selected]
-        except IndexError:
-            device = None
 
         if action == "quit":
             sys.exit()
@@ -595,13 +591,34 @@ class Menu:
                 continue
 
             try:
-                self.do(action)
+                device = self.device_list[self.selected]
+            except IndexError:
+                device = None
+
+            try:
+                self.do(device, action)
             except ActionError as e:
-                self.error = str(e)
+                self.error = self.format_error(e, device)
 
             if self.refresh:
                 self.device_tree.refresh(filter=self.filter)
                 self.device_list = self.device_tree.list()
+
+    def format_error(self, error, device):
+        """Transforms an ActionError into a legible error message.
+
+        Args:
+            error (ActionError): The ActionError to format.
+            device (Device): The device for which the action failed.
+
+        Returns:
+            A nicely formatted error message.
+        """
+        msg = str(error)
+        msg = msg.replace("`", "'")
+        msg = re.sub("GDBus.*?: ", "", msg, flags=re.IGNORECASE)
+        msg = re.sub(r"Object /\S+", device.info["path"], msg, flags=re.IGNORECASE)
+        return msg
 
     def view_help(self):
         """Displays the help and waits for keypress to exit."""

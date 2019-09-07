@@ -5,10 +5,9 @@ import curses
 import json
 import os
 import re
-import shlex
 import sys
 from itertools import chain
-from subprocess import run, Popen, PIPE, CalledProcessError
+from subprocess import run, PIPE, CalledProcessError
 from textwrap import wrap
 
 __version__ = "0.2"
@@ -166,13 +165,11 @@ class Device:
         except CalledProcessError as e:
             raise CmdError(f"{self.VIEWER}: exited with code {e.returncode}")
 
-    def open(self, raw_cmd):
+    def open(self, cmd):
         """Opens the device mountpoint with the given command.
 
         Args:
-            raw_cmd (str): Command used to open the device mountpoint. If '&' is found
-                at the end of the command, then Popen is used to execute the command in
-                background (e.g. when using a gui application).
+            cmd (str): Command used to open the device mountpoint.
 
         Raises:
             CmdError: The given command was not found or returned an error.
@@ -181,15 +178,11 @@ class Device:
         mountpoint = self.info["mountpoint"]
         if not mountpoint:
             raise DeviceError(f"Device '{self.info['name']}' not mounted.")
-        raw_cmd = raw_cmd.format(repr(mountpoint))
+        cmd = cmd.format(repr(mountpoint))
         try:
-            run_ = Popen if raw_cmd.strip().endswith("&") else run
-            raw_cmd = raw_cmd.strip("&")
-            run_(shlex.split(raw_cmd), cwd=mountpoint, encoding="utf-8")
-        except FileNotFoundError:
-            raise CmdError(f"{raw_cmd}: command not found")
+            run(cmd, cwd=mountpoint, shell=True, check=True, encoding="utf-8")
         except CalledProcessError as e:
-            raise CmdError(f"{raw_cmd}: command failed with code {e.returncode}")
+            raise CmdError(e)
 
     def _do(self, *args):
         """Runs udisksctl command.
@@ -812,7 +805,7 @@ def parse_args():
         metavar="CMD",
         default=SHELL,
         dest="open_cmd",
-        help="Command used to open a device mountpoint. Append '&' to open the command in background.",
+        help="Command used to open a device mountpoint.",
     )
     parser.add_argument(
         "--mount-opts",

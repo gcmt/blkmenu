@@ -61,7 +61,7 @@ blkmenu - tiny curses wrapper around lsblk and udisksctl.
 	Default value: " "
 
 *--open* _CMD_::
-	Command used to open a device mountpoint. Append '&' to open the command in background. + 
+	Command used to open a device mountpoint. + 
 	Default value: the value of `$SHELL` or "/bin/sh", in this order
 
 *--mount-opts* _OPTS_::

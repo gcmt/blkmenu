@@ -10,7 +10,7 @@ from itertools import chain
 from subprocess import run, PIPE, CalledProcessError
 from textwrap import wrap
 
-__version__ = "0.2"
+__version__ = "0.3"
 __scriptname__ = os.path.basename(__file__)
 
 SHELL = os.environ.get("SHELL", "/bin/sh")

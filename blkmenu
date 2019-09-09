@@ -428,7 +428,7 @@ class Menu:
         self.actions = actions
 
         self.filter = bool(args.filters or args.prunes)
-        self.devices = self.get_devices(filter=self.filter)
+        self.devices = []
         self.selected = -1
 
         self.error = ""
@@ -563,6 +563,8 @@ class Menu:
 
     def start(self):
         """Starts the main loop."""
+
+        self.devices = self.get_devices(filter=self.filter)
         self.selected = 0
 
         while True:

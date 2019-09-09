@@ -63,8 +63,6 @@ ACTION_DESCRIPTIONS = {
     "help": "Display this help screen",
 }
 
-VALID_ACTIONS = set(DEFAULT_ACTIONS.values())
-
 
 class DeviceError(Exception):
     pass
@@ -573,28 +571,22 @@ class Menu:
 
             key = self.stdscr.getkey()
 
-            self.init_state()
+            for action in self.actions.get(key, []):
 
-            if key not in self.actions:
-                continue
+                self.init_state()
 
-            action = self.actions[key]
-            if action not in VALID_ACTIONS:
-                self.error = f"Unknown action: {action}"
-                continue
+                try:
+                    device = self.devices[self.selected]
+                except IndexError:
+                    device = None
 
-            try:
-                device = self.devices[self.selected]
-            except IndexError:
-                device = None
+                try:
+                    self.do(device, action)
+                except ActionError as e:
+                    self.error = self.format_error(e, device)
 
-            try:
-                self.do(device, action)
-            except ActionError as e:
-                self.error = self.format_error(e, device)
-
-            if self.refresh:
-                self.devices = self.get_devices(filter=self.filter)
+                if self.refresh:
+                    self.devices = self.get_devices(filter=self.filter)
 
     def format_error(self, error, device):
         """Transforms an ActionError into a legible error message.
@@ -618,17 +610,16 @@ class Menu:
         y, x = self.draw_border(0, 0, title=" help ")
 
         entries = {}
-        for key, action in self.actions.items():
-            entries.setdefault(
-                action,
-                {"action": action, "keys": [], "description": ACTION_DESCRIPTIONS[action]},
-            )
+        for key, actions in self.actions.items():
+            action = ",".join(actions)
+            desc = "; ".join(ACTION_DESCRIPTIONS[a] for a in actions)
+            entries.setdefault(action, {"action": action, "keys": [], "description": desc})
             entries[action]["keys"].append(key)
 
         header, lines = Formatter(
             data=entries.values(),
             col_getter=lambda e, c: ", ".join(e[c]) if c == "keys" else e[c],
-            columns=["action", "keys", "description"],
+            columns=["keys", "action", "description"],
             separator="    ",
             stretch=False,
         ).format()
@@ -906,6 +897,14 @@ def main():
         key, action = _parse_binding_pair(pair)
         actions[key] = action
 
+    actions = {k: [a.strip() for a in v.split(",")] for k, v in actions.items()}
+
+    # check if there are unknown actions
+    valid_actions = set(ACTION_DESCRIPTIONS)
+    unknown_actions = set(chain(*actions.values())) - valid_actions
+    if unknown_actions:
+        s = "s" if len(unknown_actions) > 1 else ""
+        raise SystemExit(f"unknown action{s}: {', '.join(unknown_actions)}")
     curses.wrapper(start_menu, actions, args)
 
 

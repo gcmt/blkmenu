@@ -499,28 +499,28 @@ class Menu:
             except (CmdError, DeviceError) as e:
                 raise ActionError(e)
 
-        if device and action == "unmount":
+        elif device and action == "unmount":
             try:
                 self.message = device.unmount()
                 self.refresh = True
             except (CmdError, DeviceError) as e:
                 raise ActionError(e)
 
-        if device and action == "eject":
+        elif device and action == "eject":
             try:
                 self.message = device.eject()
                 self.refresh = True
             except (CmdError, DeviceError) as e:
                 raise ActionError(e)
 
-        if device and action == "lock":
+        elif device and action == "lock":
             try:
                 self.message = device.lock()
                 self.refresh = True
             except (CmdError, DeviceError) as e:
                 raise ActionError(e)
 
-        if device and action == "unlock":
+        elif device and action == "unlock":
             curses.savetty()
             curses.endwin()
             try:
@@ -531,7 +531,7 @@ class Menu:
             finally:
                 curses.resetty()
 
-        if device and action == "info":
+        elif device and action == "info":
             curses.savetty()
             curses.endwin()
             try:
@@ -541,7 +541,7 @@ class Menu:
             finally:
                 curses.resetty()
 
-        if device and action == "open":
+        elif device and action == "open":
             if self.args.vifm:
                 try:
                     mountpoint = device.info["mountpoint"]

@@ -40,7 +40,7 @@ DEFAULT_ACTIONS = {
     "l": "lock",
     "L": "unlock",
     "e": "eject",
-    "o": "open",
+    "o": "mount,open",
     "i": "info",
     "r": "refresh",
     "a": "toggle_filter",

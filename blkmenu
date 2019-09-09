@@ -905,6 +905,7 @@ def main():
     if unknown_actions:
         s = "s" if len(unknown_actions) > 1 else ""
         raise SystemExit(f"unknown action{s}: {', '.join(unknown_actions)}")
+
     curses.wrapper(start_menu, actions, args)
 
 

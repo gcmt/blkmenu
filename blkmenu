@@ -107,8 +107,7 @@ class Device:
         parent (Device): The parent device or None for a root node.
         children (list): Device children.
         info (dict): Device properties.
-        tree_padding (str): Tree decorations that represent the device hierarchy. Make
-            sense only in the context of a list returned by DeviceTree.list().
+        tree_padding (str): Tree decorations that represent the device hierarchy.
         root (bool): Whether or not the device is root. The root device holds no info.
     """
 
@@ -233,22 +232,11 @@ class DeviceTree:
         self._prunes = prunes or []
         self._tree = self._get_device_tree(filter=filter)
 
-    def refresh(self, filter=True):
-        """Rebuilds the device tree.
-
-        Args:
-            filter (bool): Whether or not to filter devices.
-        """
-        self._tree = self._get_device_tree(filter=filter)
-
-    def list(self):
-        """Returns the device tree as a list.
-
-        Returns:
-            A list of devices.
+    def __iter__(self):
+        """Returns an iterator which iterates on all tree devices.
 
         Note:
-            The list must not be sorted afterwards or the tree padding wouldn't make
+            The sequence must not be sorted afterwards or the tree padding wouldn't make
             sense anymore.
         """
 
@@ -267,8 +255,8 @@ class DeviceTree:
             for i, child in enumerate(device.children):
                 yield from _flatten(child, next_padding, i == len(device.children) - 1)
 
-        devices = self._tree.children
-        return list(chain(*[_flatten(d, "", 0) for d in devices]))
+        for device in self._tree.children:
+            yield from _flatten(device, "", 0)
 
     def _match(self, device, rules):
         """Returns True if any of the expression rules evaluates to True.
@@ -426,9 +414,8 @@ class Menu:
         args (argparse.Namespace): Command line arguments.
         actions (dict): Map of keys/actions.
         filter (bool): Whether or not to filter devices.
-        device_tree (DeviceTree): Device tree.
-        device_list (list): Device tree as a flat list.
-        selected (int): Selected device as an index of `device_list`.
+        devices (list): Device tree as a flat list.
+        selected (int): Selected device as an index of `devices`.
         error (str): Current error message.
         message (str): Feedback message.
         refresh (bool): Whether or not to refresh the device tree after a key press.
@@ -441,17 +428,29 @@ class Menu:
         self.actions = actions
 
         self.filter = bool(args.filters or args.prunes)
-        self.device_tree = DeviceTree(
-            filters=args.filters, prunes=args.prunes, filter=filter
-        )
-        self.device_list = []
+        self.devices = self.get_devices(filter=self.filter)
         self.selected = -1
 
-        self.init_state()
+        self.error = ""
+        self.message = ""
+        self.refresh = False
 
         curses.curs_set(False)
         curses.use_default_colors()
         curses.init_pair(1, curses.COLOR_RED, -1)
+
+    def get_devices(self, filter=False):
+        """Returns all block devices.
+
+        Args:
+            filter (bool): Wheter or not to filter devices.
+
+        Returns:
+            A list of devices.
+        """
+        if filter:
+            return list(DeviceTree(filters=self.args.filters, prunes=self.args.prunes))
+        return list(DeviceTree())
 
     def init_state(self):
         self.error = ""
@@ -479,11 +478,11 @@ class Menu:
         elif action == "help":
             self.view_help()
 
-        elif self.device_list and action == "moveup":
-            self.selected = (self.selected - 1) % len(self.device_list)
+        elif self.devices and action == "moveup":
+            self.selected = (self.selected - 1) % len(self.devices)
 
-        elif self.device_list and action == "movedown":
-            self.selected = (self.selected + 1) % len(self.device_list)
+        elif self.devices and action == "movedown":
+            self.selected = (self.selected + 1) % len(self.devices)
 
         elif action == "refresh":
             self.refresh = True
@@ -564,7 +563,6 @@ class Menu:
 
     def start(self):
         """Starts the main loop."""
-        self.device_list = self.device_tree.list()
         self.selected = 0
 
         while True:
@@ -584,7 +582,7 @@ class Menu:
                 continue
 
             try:
-                device = self.device_list[self.selected]
+                device = self.devices[self.selected]
             except IndexError:
                 device = None
 
@@ -594,8 +592,7 @@ class Menu:
                 self.error = self.format_error(e, device)
 
             if self.refresh:
-                self.device_tree.refresh(filter=self.filter)
-                self.device_list = self.device_tree.list()
+                self.devices = self.get_devices(filter=self.filter)
 
     def format_error(self, error, device):
         """Transforms an ActionError into a legible error message.
@@ -689,7 +686,7 @@ class Menu:
         width = self.stdscr.getmaxyx()[1] - (x * 2)
 
         header, lines = Formatter(
-            data=self.device_list,
+            data=self.devices,
             columns=self.args.columns,
             col_getter=self._col_getter,
             show_header=self.args.show_header,
@@ -698,16 +695,16 @@ class Menu:
             width=width,
         ).format()
 
-        if not self.device_list:
+        if not self.devices:
             self.stdscr.addstr(y, x, "No device found.")
             y += 1
 
-        if header and self.device_list:
+        if header and self.devices:
             self.stdscr.addstr(y, x, header[:width], curses.A_BOLD)
             y += 1
 
         # make sure a device is always selected when toggling filters
-        self.selected = max(min(self.selected, len(self.device_list) - 1), 0)
+        self.selected = max(min(self.selected, len(self.devices) - 1), 0)
 
         for i, line in enumerate(lines):
             attr = curses.A_REVERSE if i == self.selected else curses.A_NORMAL

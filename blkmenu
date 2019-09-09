@@ -56,10 +56,10 @@ ACTION_DESCRIPTIONS = {
     "lock": "Lock the selected device",
     "unlock": "Unlock the selected device",
     "eject": "Eject the selected device",
-    "open": f"Open the selected device mountpoint with the given --open command (defaults to '{SHELL}')",
+    "open": f"Open the selected device mountpoint",
     "info": "Display all device properties",
-    "refresh": "Refresh the device tree.",
-    "toggle_filter": "Toggle active filters (set with -a or -A options)",
+    "refresh": "Refresh the device tree",
+    "toggle_filter": "Toggle active filters",
     "help": "Display this help screen",
 }
 

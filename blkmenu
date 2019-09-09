@@ -30,21 +30,21 @@ DEFAULT_COLUMNS = [
 ]
 
 DEFAULT_ACTIONS = {
-    "q": "quit",
-    "j": "movedown",
-    "KEY_DOWN": "movedown",
-    "k": "moveup",
-    "KEY_UP": "moveup",
-    "m": "mount",
-    "u": "unmount",
-    "l": "lock",
-    "L": "unlock",
-    "e": "eject",
-    "o": "mount,open",
-    "i": "info",
-    "r": "refresh",
-    "a": "toggle_filter",
-    "?": "help",
+    "q": ["quit"],
+    "j": ["movedown"],
+    "KEY_DOWN": ["movedown"],
+    "k": ["moveup"],
+    "KEY_UP": ["moveup"],
+    "m": ["mount"],
+    "u": ["unmount"],
+    "l": ["lock"],
+    "L": ["unlock"],
+    "e": ["eject"],
+    "o": ["mount", "open"],
+    "i": ["info"],
+    "r": ["refresh"],
+    "a": ["toggle_filter"],
+    "?": ["help"],
 }
 
 ACTION_DESCRIPTIONS = {
@@ -873,10 +873,11 @@ def start_menu(stdscr, actions, args):
 
 
 def _parse_binding_pair(pair):
-    key, _, action = pair.rpartition(":")
-    if not key or not action:
-        fatal(f"{__scriptname__}: invalid 'key:action' pair: {pair}")
-    return key, action
+    key, _, actions = pair.rpartition(":")
+    actions = actions.strip(", ")
+    if not key or not actions:
+        fatal(f"invalid 'key:action' pair: {pair}")
+    return key, re.split(r"\s*,\s*", actions)
 
 
 def main():
@@ -885,26 +886,24 @@ def main():
 
     actions = DEFAULT_ACTIONS
 
-    # force an action to be mapped to only one key
+    # force an action sequence to be mapped to only one key
     for pair in args.actions_override:
-        key, action = _parse_binding_pair(pair)
-        for k, a in list(actions.items()):
-            if a == action:
-                del actions[k]
-        actions[key] = action
+        key, action_seq = _parse_binding_pair(pair)
+        for _key, _action_seq in list(actions.items()):
+            if action_seq == _action_seq:
+                del actions[_key]
+        actions[key] = action_seq
 
     for pair in args.actions:
-        key, action = _parse_binding_pair(pair)
-        actions[key] = action
+        key, action_seq = _parse_binding_pair(pair)
+        actions[key] = action_seq
 
-    actions = {k: [a.strip() for a in v.split(",")] for k, v in actions.items()}
-
-    # check if there are unknown actions
+    # check for unknown actions
     valid_actions = set(ACTION_DESCRIPTIONS)
     unknown_actions = set(chain(*actions.values())) - valid_actions
     if unknown_actions:
         s = "s" if len(unknown_actions) > 1 else ""
-        raise SystemExit(f"unknown action{s}: {', '.join(unknown_actions)}")
+        fatal(f"unknown action{s}: {', '.join(unknown_actions)}")
 
     curses.wrapper(start_menu, actions, args)
 

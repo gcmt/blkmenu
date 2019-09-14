@@ -425,7 +425,7 @@ class Menu:
         self.args = args
         self.actions = actions
 
-        self.filter = bool(args.filters or args.prunes)
+        self.filter = True
         self.devices = []
         self.selected = -1
 

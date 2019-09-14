@@ -7,7 +7,7 @@ with open("README.md") as f:
 
 setup(
     name="blkmenu",
-    version="0.3",
+    version="0.3.1",
     description="Tiny curses wrapper around lsblk and udisksctl",
     long_description=readme,
     long_description_content_type="text/markdown",
